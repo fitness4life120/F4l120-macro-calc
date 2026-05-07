@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Macro Calculator | Fitness 4Life 120</title>
+  <meta name="description" content="Science-based macro & calorie calculator from Fitness 4Life 120. Personalized nutrition targets to help you live the full 120." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --teal: #186476; --teal-mid: #1A7A8A; --teal-light: #e8f4f6; --teal-pale: #f0f9fb;
+      --gold: #B8912A; --gold-light: #fdf6e3; --text: #1a2e33; --muted: #5a7a82;
+      --border: #d0e8ed; --white: #ffffff; --bg: #f5fbfc;
+    }
+    body { background: var(--bg); font-family: 'Outfit', sans-serif; color: var(--text); }
+    .app { min-height: 100vh; background: var(--bg); }
+
+    /* Hero */
+    .hero {
+      background: linear-gradient(135deg, #0f2830 0%, #186476 60%, #1A7A8A 100%);
+      padding: 40px 24px 32px; text-align: center; position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 70% 50%, rgba(26,122,138,0.3) 0%, transparent 70%);
+    }
+    .hero-eyebrow { font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #B8912A; font-weight: 700; margin-bottom: 10px; position: relative; }
+    .hero-title { font-family: 'Playfair Display', serif; font-size: 32px; color: white; line-height: 1.2; position: relative; margin-bottom: 8px; }
+    .hero-sub { font-size: 14px; color: rgba(255,255,255,0.65); position: relative; margin-bottom: 12px; }
+    .hero-badge {
+      display: inline-block; background: rgba(184,145,42,0.15); border: 1px solid rgba(184,145,42,0.4);
+      color: #B8912A; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+      padding: 4px 12px; border-radius: 20px; font-weight: 600; position: relative;
+    }
+
+    /* Body */
+    .body { padding: 28px 20px; max-width: 780px; margin: 0 auto; }
+
+    /* Steps */
+    .step {
+      background: white; border: 1px solid var(--border); border-radius: 14px;
+      padding: 22px; margin-bottom: 14px; box-shadow: 0 2px 12px rgba(24,100,118,0.06);
+    }
+    .step-header { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+    .step-num {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: linear-gradient(135deg, #186476, #1A7A8A); color: white;
+      font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .step-title { font-size: 15px; font-weight: 700; color: var(--text); }
+    .step-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    /* Grid */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; }
+
+    /* Fields */
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+    .field input, .field select {
+      background: var(--teal-pale); border: 1.5px solid var(--border); border-radius: 8px;
+      padding: 10px 12px; font-family: 'Outfit', sans-serif; font-size: 14px; color: var(--text);
+      transition: border-color 0.2s, box-shadow 0.2s; outline: none;
+    }
+    .field input:focus, .field select:focus { border-color: var(--teal-mid); box-shadow: 0 0 0 3px rgba(26,122,138,0.12); }
+    .field .hint { font-size: 10px; color: #a0b8bc; font-style: italic; }
+
+    /* Goal cards */
+    .goal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .goal-card {
+      border: 2px solid var(--border); border-radius: 8px; padding: 10px 12px;
+      cursor: pointer; transition: all 0.2s; text-align: center; background: white;
+    }
+    .goal-card:hover { border-color: var(--teal-mid); }
+    .goal-card.selected { border-color: var(--teal-mid); background: var(--teal-pale); }
+    .goal-name { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+    .goal-adj { font-size: 11px; color: var(--muted); }
+
+    /* Distribution cards */
+    .dist-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .dist-card {
+      border: 2px solid var(--border); border-radius: 10px; padding: 14px 16px;
+      cursor: pointer; transition: all 0.2s; background: white; position: relative;
+    }
+    .dist-card:hover { border-color: var(--teal-mid); background: var(--teal-pale); }
+    .dist-card.selected { border-color: var(--teal-mid); background: var(--teal-pale); }
+    .dist-card.selected::after {
+      content: '✓'; position: absolute; top: 10px; right: 12px;
+      width: 20px; height: 20px; background: var(--teal-mid); color: white;
+      border-radius: 50%; font-size: 11px; display: flex; align-items: center;
+      justify-content: center; font-weight: 700;
+    }
+    .dist-tag { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--teal-mid); font-weight: 600; margin-bottom: 4px; }
+    .dist-name { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .dist-bars { display: flex; gap: 3px; height: 6px; border-radius: 3px; overflow: hidden; margin-bottom: 6px; }
+    .dist-p { background: #1A7A8A; } .dist-c { background: #4CAF91; } .dist-f { background: #B8912A; }
+    .dist-breakdown { font-size: 11px; color: var(--muted); display: flex; gap: 10px; }
+    .dist-rationale { font-size: 11px; color: var(--muted); font-style: italic; margin-top: 5px; line-height: 1.4; }
+
+    /* Button */
+    .calc-btn {
+      width: 100%; background: linear-gradient(135deg, #186476, #1A7A8A); color: white;
+      border: none; border-radius: 10px; padding: 16px; font-family: 'Outfit', sans-serif;
+      font-size: 16px; font-weight: 700; letter-spacing: 0.5px; cursor: pointer;
+      transition: all 0.2s; margin-top: 6px;
+    }
+    .calc-btn:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(24,100,118,0.3); }
+
+    /* Results */
+    .results {
+      background: white; border: 1px solid var(--border); border-radius: 14px;
+      overflow: hidden; box-shadow: 0 4px 24px rgba(24,100,118,0.1); margin-bottom: 14px;
+    }
+    .results-header {
+      background: linear-gradient(135deg, #0f2830, #186476);
+      padding: 18px 22px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .results-title { font-family: 'Playfair Display', serif; font-size: 20px; color: white; }
+    .results-meta { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 3px; }
+    .formula-tag {
+      background: rgba(184,145,42,0.2); border: 1px solid rgba(184,145,42,0.4);
+      color: #B8912A; font-size: 10px; letter-spacing: 1px; padding: 3px 8px;
+      border-radius: 4px; font-weight: 600;
+    }
+    .results-body { padding: 22px; }
+
+    /* Calorie row */
+    .calorie-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+    .cal-box {
+      background: var(--teal-pale); border: 1px solid var(--border);
+      border-radius: 10px; padding: 16px; text-align: center;
+    }
+    .cal-box.featured { background: linear-gradient(135deg, #186476, #1A7A8A); border-color: transparent; }
+    .cal-val { font-size: 34px; font-weight: 800; color: var(--teal-mid); line-height: 1; }
+    .cal-box.featured .cal-val { color: white; }
+    .cal-box.featured .cal-label { color: rgba(255,255,255,0.7); }
+    .cal-box.featured .cal-sub { color: rgba(255,255,255,0.5); font-size: 11px; margin-top: 2px; }
+    .cal-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-top: 4px; font-weight: 600; }
+    .cal-hint { font-size: 10px; color: #a0b8bc; margin-top: 3px; }
+
+    /* Macros */
+    .macro-section { border-top: 1px solid var(--border); padding-top: 18px; }
+    .macro-title { font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: var(--muted); font-weight: 700; margin-bottom: 14px; }
+    .macro-blocks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+    .macro-block { border-radius: 10px; padding: 14px 12px; text-align: center; }
+    .macro-block.protein { background: #e8f7f9; border: 1px solid #b8dde4; }
+    .macro-block.carbs { background: #eaf7f1; border: 1px solid #b8e0d0; }
+    .macro-block.fat { background: #fdf6e3; border: 1px solid #e8d5a0; }
+    .macro-g { font-size: 36px; font-weight: 800; line-height: 1; }
+    .macro-unit { font-size: 16px; font-weight: 400; }
+    .macro-block.protein .macro-g { color: #1A7A8A; }
+    .macro-block.carbs .macro-g { color: #2e8a6a; }
+    .macro-block.fat .macro-g { color: #B8912A; }
+    .macro-name { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); font-weight: 700; margin-top: 4px; }
+    .macro-cal { font-size: 11px; color: #a0b8bc; margin-top: 2px; }
+    .macro-note { font-size: 10px; color: var(--muted); font-style: italic; margin-top: 3px; }
+
+    /* Visual bar */
+    .visual-bar { display: flex; height: 12px; border-radius: 6px; overflow: hidden; margin: 12px 0; }
+    .bar-p { background: #1A7A8A; } .bar-c { background: #4CAF91; } .bar-f { background: #B8912A; }
+    .bar-legend { display: flex; gap: 16px; font-size: 11px; color: var(--muted); margin-top: 6px; }
+    .legend-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+
+    /* Notes */
+    .science-note {
+      background: var(--gold-light); border: 1px solid #e8d5a0; border-left: 3px solid var(--gold);
+      border-radius: 6px; padding: 12px 14px; font-size: 12px; color: #7a6020; line-height: 1.5; margin-top: 14px;
+    }
+    .science-note strong { color: var(--gold); }
+    .protein-note {
+      background: #e8f7f9; border: 1px solid #b8dde4; border-left: 3px solid var(--teal-mid);
+      border-radius: 6px; padding: 10px 14px; font-size: 12px; color: #1a4a52; margin-top: 10px; line-height: 1.5;
+    }
+
+    /* Print button */
+    .print-btn {
+      background: transparent; border: 1.5px solid rgba(255,255,255,0.4); color: rgba(255,255,255,0.7);
+      border-radius: 7px; padding: 7px 14px; font-family: 'Outfit', sans-serif;
+      font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+    }
+    .print-btn:hover { background: rgba(255,255,255,0.1); color: white; border-color: white; }
+
+    /* Footer */
+    .footer {
+      text-align: center; padding: 24px 20px;
+      background: linear-gradient(to bottom, var(--bg), #e8f4f6);
+      border-top: 1px solid var(--border); margin-top: 10px;
+    }
+    .footer-brand { font-weight: 800; font-size: 16px; color: var(--teal-mid); letter-spacing: 2px; margin-bottom: 4px; }
+    .footer-tagline { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+    .footer-verse { font-style: italic; color: #a0c8d0; font-size: 11px; }
+    .footer-disc { font-size: 10px; color: #b0c8cc; margin-top: 10px; }
+
+    @media print {
+      .step, .calc-btn, .print-btn { display: none !important; }
+      .results { box-shadow: none; border: 1px solid #ccc; }
+      .hero { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+
+    @media (max-width: 600px) {
+      .grid-3 { grid-template-columns: 1fr 1fr; }
+      .grid-4 { grid-template-columns: 1fr 1fr; }
+      .goal-grid { grid-template-columns: 1fr 1fr; }
+      .dist-grid { grid-template-columns: 1fr; }
+      .calorie-row { grid-template-columns: 1fr; }
+      .macro-blocks { grid-template-columns: 1fr; }
+      .results-header { flex-direction: column; gap: 10px; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState } = React;
+
+    const ACTIVITY_LEVELS = [
+      { id: "sedentary",  label: "Sedentary",          desc: "Desk job, little or no exercise",          mult: 1.2   },
+      { id: "light",      label: "Lightly Active",      desc: "Light exercise 1–3 days per week",         mult: 1.375 },
+      { id: "moderate",   label: "Moderately Active",   desc: "Moderate exercise 3–5 days per week",      mult: 1.55  },
+      { id: "active",     label: "Very Active",         desc: "Hard exercise 6–7 days per week",          mult: 1.725 },
+      { id: "extreme",    label: "Extremely Active",    desc: "Physical job + intense daily training",    mult: 1.9   },
+    ];
+
+    const GOALS = [
+      { id: "aggressiveCut", label: "Aggressive Cut",  adj: -0.25, tag: "−25% TDEE", proteinMult: 1.2 },
+      { id: "cut",           label: "Cut",             adj: -0.20, tag: "−20% TDEE", proteinMult: 1.1 },
+      { id: "mildCut",       label: "Mild Cut",        adj: -0.15, tag: "−15% TDEE", proteinMult: 1.0 },
+      { id: "recomp",        label: "Recomp",          adj: -0.10, tag: "−10% TDEE", proteinMult: 1.0 },
+      { id: "maintain",      label: "Maintain",        adj:  0.00, tag: "TDEE",       proteinMult: 0.82 },
+      { id: "mildBulk",      label: "Lean Bulk",       adj:  0.10, tag: "+10% TDEE", proteinMult: 0.9 },
+    ];
+
+    const DISTRIBUTIONS = [
+      {
+        id: "balanced", name: "Balanced", tag: "Standard / General Health",
+        carbPct: 0.50, fatPct: 0.50, barsP: 30, barsC: 40, barsF: 30,
+        rationale: "Flexible and sustainable for most people. Well-researched for general fitness and body composition.",
+      },
+      {
+        id: "highCarb", name: "High Carb / Low Fat", tag: "Performance & Endurance",
+        carbPct: 0.72, fatPct: 0.28, barsP: 28, barsC: 52, barsF: 20,
+        rationale: "Maximizes glycogen for athletes and high-volume training. Ideal for those who thrive on carbohydrates.",
+      },
+      {
+        id: "highFat", name: "High Fat / Low Carb", tag: "Metabolic Health & Satiety",
+        carbPct: 0.22, fatPct: 0.78, barsP: 30, barsC: 15, barsF: 55,
+        rationale: "Promotes fat adaptation and appetite control. Good for insulin sensitivity and metabolic flexibility.",
+      },
+      {
+        id: "keto", name: "Ketogenic", tag: "Fat Adaptation / Under 50g Carbs",
+        carbPct: 0.05, fatPct: 0.95, barsP: 30, barsC: 5, barsF: 65,
+        rationale: "Very low carb to induce ketosis. Research-backed for fat loss and metabolic reset in compliant individuals.",
+      },
+    ];
+
+    function App() {
+      const [form, setForm] = useState({
+        clientName: "", age: "", gender: "male",
+        weightLbs: "", heightFt: "", heightIn: "",
+        bodyFatPct: "", activity: "moderate",
+      });
+      const [goal, setGoal] = useState("cut");
+      const [dist, setDist] = useState("balanced");
+      const [results, setResults] = useState(null);
+      const [errors, setErrors] = useState({});
+
+      const f = (k, v) => setForm(p => ({ ...p, [k]: v }));
+
+      const validate = () => {
+        const e = {};
+        if (!form.age) e.age = true;
+        if (!form.weightLbs) e.weightLbs = true;
+        if (!form.heightFt) e.heightFt = true;
+        setErrors(e);
+        return Object.keys(e).length === 0;
+      };
+
+      const calculate = () => {
+        if (!validate()) return;
+
+        const weightKg = parseFloat(form.weightLbs) * 0.453592;
+        const heightCm = (parseFloat(form.heightFt || 0) * 30.48) + (parseFloat(form.heightIn || 0) * 2.54);
+        const age = parseFloat(form.age);
+
+        const bmr = form.gender === "male"
+          ? (10 * weightKg) + (6.25 * heightCm) - (5 * age) + 5
+          : (10 * weightKg) + (6.25 * heightCm) - (5 * age) - 161;
+
+        const actMult = ACTIVITY_LEVELS.find(a => a.id === form.activity).mult;
+        const tdee = Math.round(bmr * actMult);
+
+        const goalData = GOALS.find(g => g.id === goal);
+        const targetCals = Math.round(tdee * (1 + goalData.adj));
+
+        const protein = Math.round(parseFloat(form.weightLbs) * goalData.proteinMult);
+        const proteinCals = protein * 4;
+        const remainingCals = targetCals - proteinCals;
+
+        const distData = DISTRIBUTIONS.find(d => d.id === dist);
+        let carbCals = Math.round(remainingCals * distData.carbPct);
+        let fatCals = Math.round(remainingCals * distData.fatPct);
+
+        if (dist === "keto") {
+          carbCals = Math.min(carbCals, 50 * 4);
+          fatCals = targetCals - proteinCals - carbCals;
+        }
+
+        const carbs = Math.round(carbCals / 4);
+        const fat = Math.round(fatCals / 9);
+        const lbm = form.bodyFatPct ? Math.round(parseFloat(form.weightLbs) * (1 - parseFloat(form.bodyFatPct) / 100)) : null;
+
+        setResults({
+          clientName: form.clientName, bmr: Math.round(bmr), tdee, targetCals,
+          protein, carbs, fat, proteinCals, carbCals, fatCals, lbm,
+          goalLabel: goalData.label, distLabel: distData.name,
+          proteinMult: goalData.proteinMult,
+          pPct: Math.round(proteinCals / targetCals * 100),
+          cPct: Math.round(carbCals / targetCals * 100),
+          fPct: Math.round(fatCals / targetCals * 100),
+        });
+
+        setTimeout(() => document.getElementById("results")?.scrollIntoView({ behavior: "smooth" }), 100);
+      };
+
+      return (
+        <div className="app">
+          {/* Hero */}
+          <div className="hero">
+            <div className="hero-eyebrow">Fitness 4Life 120</div>
+            <div className="hero-title">Personalized Macro Calculator</div>
+            <div className="hero-sub">Science-based nutrition targets tailored to your body and goals</div>
+            <div className="hero-badge">Mifflin-St Jeor Equation · Evidence-Based Protein Targets</div>
+          </div>
+
+          <div className="body">
+
+            {/* Step 1 */}
+            <div className="step">
+              <div className="step-header">
+                <div className="step-num">1</div>
+                <div>
+                  <div className="step-title">Personal Stats</div>
+                  <div className="step-sub">Your biometrics power the Mifflin-St Jeor BMR calculation</div>
+                </div>
+              </div>
+
+              <div className="grid-3" style={{marginBottom: 12}}>
+                <div className="field">
+                  <label>Your Name (optional)</label>
+                  <input placeholder="e.g. John Smith" value={form.clientName} onChange={e => f("clientName", e.target.value)} />
+                </div>
+                <div className="field">
+                  <label>Age {errors.age && <span style={{color:"#e05a5a"}}>*</span>}</label>
+                  <input type="number" placeholder="35" value={form.age} onChange={e => f("age", e.target.value)} style={errors.age ? {borderColor:"#e05a5a"} : {}} />
+                </div>
+                <div className="field">
+                  <label>Biological Sex</label>
+                  <select value={form.gender} onChange={e => f("gender", e.target.value)}>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid-4" style={{marginBottom: 12}}>
+                <div className="field" style={{gridColumn: "span 2"}}>
+                  <label>Weight (lbs) {errors.weightLbs && <span style={{color:"#e05a5a"}}>*</span>}</label>
+                  <input type="number" placeholder="185" value={form.weightLbs} onChange={e => f("weightLbs", e.target.value)} style={errors.weightLbs ? {borderColor:"#e05a5a"} : {}} />
+                </div>
+                <div className="field">
+                  <label>Height — Feet {errors.heightFt && <span style={{color:"#e05a5a"}}>*</span>}</label>
+                  <input type="number" placeholder="5" value={form.heightFt} onChange={e => f("heightFt", e.target.value)} style={errors.heightFt ? {borderColor:"#e05a5a"} : {}} />
+                </div>
+                <div className="field">
+                  <label>Height — Inches</label>
+                  <input type="number" placeholder="11" value={form.heightIn} onChange={e => f("heightIn", e.target.value)} />
+                </div>
+              </div>
+
+              <div style={{maxWidth: 260}}>
+                <div className="field">
+                  <label>Body Fat % (optional)</label>
+                  <input type="number" placeholder="18.5" step="0.1" value={form.bodyFatPct} onChange={e => f("bodyFatPct", e.target.value)} />
+                  <span className="hint">From DEXA scan or calipers — enables lean body mass display</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Step 2 */}
+            <div className="step">
+              <div className="step-header">
+                <div className="step-num">2</div>
+                <div>
+                  <div className="step-title">Activity Level</div>
+                  <div className="step-sub">Choose what best reflects your typical week — be honest for accuracy</div>
+                </div>
+              </div>
+              <div className="field">
+                <select value={form.activity} onChange={e => f("activity", e.target.value)} style={{maxWidth: 440}}>
+                  {ACTIVITY_LEVELS.map(a => (
+                    <option key={a.id} value={a.id}>{a.label} — {a.desc} (×{a.mult})</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Step 3 */}
+            <div className="step">
+              <div className="step-header">
+                <div className="step-num">3</div>
+                <div>
+                  <div className="step-title">Nutrition Goal</div>
+                  <div className="step-sub">Calorie targets are set as a percentage of your TDEE — research-recommended ranges</div>
+                </div>
+              </div>
+              <div className="goal-grid">
+                {GOALS.map(g => (
+                  <div key={g.id} className={`goal-card ${goal === g.id ? "selected" : ""}`} onClick={() => setGoal(g.id)}>
+                    <div className="goal-name">{g.label}</div>
+                    <div className="goal-adj">{g.tag}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Step 4 */}
+            <div className="step">
+              <div className="step-header">
+                <div className="step-num">4</div>
+                <div>
+                  <div className="step-title">Macro Distribution</div>
+                  <div className="step-sub">Protein is prioritized by goal first — remaining calories split between carbs and fat</div>
+                </div>
+              </div>
+              <div className="dist-grid">
+                {DISTRIBUTIONS.map(d => (
+                  <div key={d.id} className={`dist-card ${dist === d.id ? "selected" : ""}`} onClick={() => setDist(d.id)}>
+                    <div className="dist-tag">{d.tag}</div>
+                    <div className="dist-name">{d.name}</div>
+                    <div className="dist-bars">
+                      <div className="dist-p" style={{width: d.barsP + "%"}} />
+                      <div className="dist-c" style={{width: d.barsC + "%"}} />
+                      <div className="dist-f" style={{width: d.barsF + "%"}} />
+                    </div>
+                    <div className="dist-breakdown">
+                      <span style={{color:"#1A7A8A", fontWeight:600}}>{d.barsP}% P</span>
+                      <span style={{color:"#2e8a6a", fontWeight:600}}>{d.barsC}% C</span>
+                      <span style={{color:"#B8912A", fontWeight:600}}>{d.barsF}% F</span>
+                    </div>
+                    <div className="dist-rationale">{d.rationale}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <button className="calc-btn" onClick={calculate}>Calculate My Macros →</button>
+
+            {/* Results */}
+            {results && (
+              <div id="results" className="results" style={{marginTop: 22}}>
+                <div className="results-header">
+                  <div>
+                    <div className="results-title">
+                      {results.clientName ? `${results.clientName}'s Results` : "Your Macro Targets"}
+                    </div>
+                    <div className="results-meta">{results.goalLabel} · {results.distLabel} Distribution</div>
+                  </div>
+                  <div style={{display:"flex", flexDirection:"column", alignItems:"flex-end", gap: 8}}>
+                    <div className="formula-tag">Mifflin-St Jeor</div>
+                    <button className="print-btn" onClick={() => window.print()}>🖨 Save / Print PDF</button>
+                  </div>
+                </div>
+
+                <div className="results-body">
+                  <div className="calorie-row">
+                    <div className="cal-box">
+                      <div className="cal-val">{results.bmr.toLocaleString()}</div>
+                      <div className="cal-label">BMR</div>
+                      <div className="cal-hint">Basal metabolic rate</div>
+                    </div>
+                    <div className="cal-box">
+                      <div className="cal-val">{results.tdee.toLocaleString()}</div>
+                      <div className="cal-label">TDEE</div>
+                      <div className="cal-hint">Total daily expenditure</div>
+                    </div>
+                    <div className="cal-box featured">
+                      <div className="cal-val">{results.targetCals.toLocaleString()}</div>
+                      <div className="cal-label">Target Calories</div>
+                      <div className="cal-sub">{results.goalLabel}</div>
+                    </div>
+                  </div>
+
+                  <div className="macro-section">
+                    <div className="macro-title">Daily Macro Targets — {results.distLabel}</div>
+
+                    <div className="macro-blocks">
+                      <div className="macro-block protein">
+                        <div className="macro-g">{results.protein}<span className="macro-unit">g</span></div>
+                        <div className="macro-name">Protein</div>
+                        <div className="macro-cal">{results.proteinCals} cal · {results.pPct}%</div>
+                        <div className="macro-note">{results.proteinMult}g per lb bodyweight</div>
+                      </div>
+                      <div className="macro-block carbs">
+                        <div className="macro-g">{results.carbs}<span className="macro-unit">g</span></div>
+                        <div className="macro-name">Carbohydrates</div>
+                        <div className="macro-cal">{results.carbCals} cal · {results.cPct}%</div>
+                      </div>
+                      <div className="macro-block fat">
+                        <div className="macro-g">{results.fat}<span className="macro-unit">g</span></div>
+                        <div className="macro-name">Fat</div>
+                        <div className="macro-cal">{results.fatCals} cal · {results.fPct}%</div>
+                      </div>
+                    </div>
+
+                    <div className="visual-bar">
+                      <div className="bar-p" style={{width: results.pPct + "%"}} />
+                      <div className="bar-c" style={{width: results.cPct + "%"}} />
+                      <div className="bar-f" style={{width: results.fPct + "%"}} />
+                    </div>
+                    <div className="bar-legend">
+                      <span><span className="legend-dot" style={{background:"#1A7A8A"}}></span>Protein {results.pPct}%</span>
+                      <span><span className="legend-dot" style={{background:"#4CAF91"}}></span>Carbs {results.cPct}%</span>
+                      <span><span className="legend-dot" style={{background:"#B8912A"}}></span>Fat {results.fPct}%</span>
+                    </div>
+
+                    {results.lbm && (
+                      <div className="protein-note">
+                        <strong>Lean Body Mass: {results.lbm} lbs</strong> — Your protein target of {results.protein}g is calibrated to protect and build lean muscle based on your goal.
+                      </div>
+                    )}
+
+                    <div className="science-note">
+                      <strong>How This Was Calculated:</strong> BMR was determined using the <em>Mifflin-St Jeor equation (1990)</em> — the most validated predictive formula for most adults.
+                      Protein was set at <strong>{results.proteinMult}g per lb of bodyweight</strong> based on current sports nutrition research on muscle protein synthesis.
+                      Your calorie target is <strong>{GOALS.find(g => g.id === goal)?.tag}</strong> of your TDEE.
+                      These are research-based starting targets — track your progress and adjust every 2–3 weeks.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+          </div>
+
+          {/* Footer */}
+          <div className="footer">
+            <div className="footer-brand">FITNESS 4LIFE 120</div>
+            <div className="footer-tagline">Empowering You to Live the Full 120</div>
+            <div className="footer-verse">"My spirit shall not always strive with man… yet his days shall be an hundred and twenty years." — Genesis 6:3</div>
+            <div className="footer-disc">These targets are evidence-based estimates. Individual results vary. Consult a physician before making significant dietary changes.</div>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
